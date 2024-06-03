@@ -1,14 +1,5 @@
 from django.db import models
 
-# Модель Task:
-# Описание: Задача для выполнения.
-# Поля:
-# title: Название задачи. Уникально для даты.
-# description: Описание задачи.
-# categories: Категории задачи. Многие ко многим.
-# status: Статус задачи. Выбор из: New, In progress, Pending, Blocked, Done
-# deadline: Дата и время дедлайн.
-# created_at: Дата и время создания. Автоматическое заполнение.
 
 TASK_STATUS_CHOICES = [
     ('New', 'New'),
@@ -21,55 +12,62 @@ TASK_STATUS_CHOICES = [
 
 
 class Task(models.Model):
-    title = models.CharField(max_length=255,
+    title = models.CharField(max_length=50,
                              unique_for_date='deadline',
-                             verbose_name='Имя задачи.'
+                             verbose_name='Title.'
                              )
-    description = models.TextField(null=True, blank=True, verbose_name='Описание задачи')
-    categories = models.ManyToManyField('Category', verbose_name='Kaтегория')
+    description = models.TextField(null=True, blank=True, verbose_name='Description.')
+    category = models.ManyToManyField('Category', verbose_name='Category')
     status = models.CharField(max_length=20,
                               choices=TASK_STATUS_CHOICES,
                               default='No status',
-                              verbose_name='Статус выполнения'
+                              verbose_name='Status'
                               )
-    deadline = models.DateTimeField(null=True, blank=True, verbose_name='Дата дедлайна')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания задания')
+    deadline = models.DateTimeField(null=True, blank=True, verbose_name='Deadline')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created_at')
 
     def __str__(self):
         return self.title
 
+    class Meta:
+        db_table = 'task_manager_task'
+        ordering = ['-created_at']
+        verbose_name = 'Task'
+        unique_together = ('title',)
 
-# Модель SubTask:
-# Описание: Отдельная часть основной задачи (Task).
-# Поля:
-# title: Название подзадачи.
-# description: Описание подзадачи.
-# task: Основная задача. Один ко многим.
-# status: Статус задачи. Выбор из: New, In progress, Pending, Blocked, Done
-# deadline: Дата и время дедлайн.
-# created_at: Дата и время создания. Автоматическое заполнение.
 
 class SubTask(models.Model):
-    title = models.CharField(max_length=255, verbose_name='Название подзадачи')
-    description = models.TextField(null=True, blank=True, verbose_name='Описание подзадачи')
+    title = models.CharField(max_length=50, verbose_name='Title.')
+    description = models.TextField(null=True, blank=True, verbose_name='Description.')
     task = models.ForeignKey(Task, on_delete=models.CASCADE,
                              related_name='subtask',
-                             verbose_name='Задача',
+                             verbose_name='Subtask',
                              null=True, blank=True)
     status = models.CharField(max_length=20,
                               choices=TASK_STATUS_CHOICES,
                               default='No status',
-                              verbose_name='Статус выполнения'
+                              verbose_name='Status'
                               )
-    deadline = models.DateTimeField(null=True, blank=True, verbose_name='Дата дедлайна')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания задания')
+    deadline = models.DateTimeField(null=True, blank=True, verbose_name='Deadline')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created_at')
 
     def __str__(self):
         return self.title
 
+    class Meta:
+        db_table = 'task_manager_subtask'
+        ordering = ['-created_at']
+        verbose_name = 'Subtask'
+        unique_together = ('title',)
+
 
 class Category(models.Model):
-    name = models.CharField(max_length=50, verbose_name='Название категории')
+    name = models.CharField(max_length=50, verbose_name='Category')
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        db_table = 'task_manager_category'
+        verbose_name = 'Category'
+        unique_together = ('name',)
