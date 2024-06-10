@@ -70,13 +70,19 @@ def main():
     # except ObjectDoesNotExist:
     #     print("No subtask found")
 
-    subtask = SubTask.objects.get(title__exact='Create slides')
-    subtask.title = "Create and format presentation slides"
-    subtask.save()
+    try:
+        subtask = SubTask.objects.get(title__exact='Create slides')
+        subtask.title = "Create and format presentation slides"
+        subtask.save()
+    except ObjectDoesNotExist:
+        print("Subtask does not exist")
 
-    # 4. Удаление записей:
-    # - Удалите задачу "Prepare presentation" и все ее подзадачи.
-    Task.objects.get(title="Prepare presentation").delete()
+    # Удаление записей:
+
+    try:
+        Task.objects.get(title="Prepare presentation").delete()
+    except ObjectDoesNotExist:
+        print("Task not found")
 
 if __name__ == '__main__':
     main()
