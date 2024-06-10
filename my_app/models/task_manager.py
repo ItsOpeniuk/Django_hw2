@@ -12,6 +12,7 @@ TASK_STATUS_CHOICES = [
 
 
 class Task(models.Model):
+
     title = models.CharField(max_length=50,
                              unique_for_date='deadline',
                              verbose_name='Title.'
@@ -41,7 +42,7 @@ class SubTask(models.Model):
     description = models.TextField(null=True, blank=True, verbose_name='Description.')
     task = models.ForeignKey(Task, on_delete=models.CASCADE,
                              related_name='subtask',
-                             verbose_name='Subtask',
+                             verbose_name='Subtask.',
                              null=True, blank=True)
     status = models.CharField(max_length=20,
                               choices=TASK_STATUS_CHOICES,
