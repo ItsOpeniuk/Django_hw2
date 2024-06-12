@@ -1,14 +1,5 @@
 from django.db import models
-
-
-TASK_STATUS_CHOICES = [
-    ('New', 'New'),
-    ('In Progress', 'In Progress'),
-    ('Pending', 'Pending'),
-    ('Blocked', 'Blocked'),
-    ('Done', 'Done'),
-    ('No status', 'No status')
-]
+from my_app.contants.task_choices import TASK_STATUS_CHOICES
 
 
 class Task(models.Model):
@@ -60,15 +51,3 @@ class SubTask(models.Model):
         ordering = ['-created_at']
         verbose_name = 'Subtask'
         unique_together = ('title',)
-
-
-class Category(models.Model):
-    name = models.CharField(max_length=50, verbose_name='Category')
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        db_table = 'task_manager_category'
-        verbose_name = 'Category'
-        unique_together = ('name',)

@@ -1,1 +1,2 @@
-from my_app.models.task_manager import Task, SubTask, Category
+from my_app.models.task import Task, SubTask
+from my_app.models.category import Category
