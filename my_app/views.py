@@ -1,3 +1,5 @@
+from rest_framework.generics import get_object_or_404
+from rest_framework.views import APIView
 from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.request import Request
@@ -6,8 +8,8 @@ from rest_framework import status
 from django.db.models import Q, Count
 
 from my_app.models import Task, SubTask, Category
-from my_app.serializers.tasks import TaskSerializer
-from my_app.serializers.subtasks import SubTaskSerializer
+from my_app.serializers.tasks import TaskSerializer, TaskCreateSerializer
+from my_app.serializers.subtasks import SubTaskSerializer, SubTaskCreateSerializer
 from my_app.serializers.categories import CategorySerializer
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
@@ -46,7 +48,10 @@ def get_all_tasks(request: Request) -> Response:
 
     if not tasks.exists():
 
-        return Response(data=[], status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            data=[],
+            status=status.HTTP_204_NO_CONTENT
+        )
 
     if page_size:
         try:
@@ -56,7 +61,7 @@ def get_all_tasks(request: Request) -> Response:
         except PageNotAnInteger as err:
             return Response(data=str(err), status=status.HTTP_200_OK)
         except EmptyPage as err:
-            return Response(data=[], status=status.HTTP_204_NO_CONTENT)
+            return Response(data=str(err), status=status.HTTP_204_NO_CONTENT)
     else:
         serializer = TaskSerializer(tasks, many=True)
 
@@ -78,3 +83,83 @@ def get_statistics(request: Request) -> Response:
         return Response(data=data, status=status.HTTP_200_OK)
     else:
         return Response(data=[], status=status.HTTP_204_NO_CONTENT)
+
+
+class SubTaskListCreateView(APIView):
+
+    def get(self, request: Request) -> Response:
+        subtasks = SubTask.objects.all()
+        if not subtasks.exists():
+            return Response(
+                data=[],
+                status=status.HTTP_204_NO_CONTENT
+            )
+        serializer = SubTaskSerializer(subtasks, many=True)
+        return Response(
+            data=serializer.data,
+            status=status.HTTP_200_OK
+        )
+
+    def post(self, request: Request) -> Response:
+        serializer = SubTaskCreateSerializer(data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                data=serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(
+            data=serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+class SubTaskDetailUpdateDeleteView(APIView):
+
+    def get_object(self, pk: int) -> SubTask:
+        return get_object_or_404(SubTask, pk=pk)
+
+    def get(self, request: Request, pk: int) -> Response:
+        subtask = self.get_object(pk)
+        serializer = SubTaskSerializer(subtask, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                data=serializer.data,
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            data=serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def put(self, request: Request, pk: int) -> Response:
+        subtask = self.get_object(pk=pk)
+        serializer = SubTaskSerializer(subtask, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                data=serializer.data,
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            data=serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def delete(self, request: Request, pk: int) -> Response:
+        subtask = self.get_object(pk=pk)
+        subtask.delete()
+
+        return Response(
+            data={
+                'message': f'Deleted subtask {subtask.id}'
+            },
+            status=status.HTTP_200_OK
+        )
