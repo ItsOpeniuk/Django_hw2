@@ -1,15 +1,16 @@
 from django.db import models
+
 from my_app.contants.task_choices import TASK_STATUS_CHOICES
+from my_app.models.task import Task
 
 
-class Task(models.Model):
-
-    title = models.CharField(max_length=50,
-                             unique_for_date='deadline',
-                             verbose_name='Title.'
-                             )
+class SubTask(models.Model):
+    title = models.CharField(max_length=50, verbose_name='Title.')
     description = models.TextField(null=True, blank=True, verbose_name='Description.')
-    category = models.ManyToManyField('Category', verbose_name='Category')
+    task = models.ForeignKey(Task, on_delete=models.CASCADE,
+                             related_name='subtasks',
+                             verbose_name='tasks',
+                             null=True, blank=True)
     status = models.CharField(max_length=20,
                               choices=TASK_STATUS_CHOICES,
                               default='No status',
@@ -22,7 +23,7 @@ class Task(models.Model):
         return self.title
 
     class Meta:
-        db_table = 'task_manager_task'
+        db_table = 'task_manager_subtask'
         ordering = ['-created_at']
-        verbose_name = 'Task'
+        verbose_name = 'Subtask'
         unique_together = ('title',)

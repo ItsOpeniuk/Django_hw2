@@ -44,10 +44,16 @@ INSTALLED_APPS = [
 
     # 3rd part
     'rest_framework',
+    'django_filters',
 
     # local
     'my_app.apps.MyAppConfig',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'my_app.paginator.GeneralPaginator',
+    'PAGE_SIZE': 5
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

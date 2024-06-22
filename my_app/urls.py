@@ -1,11 +1,21 @@
-from django.urls import path
-from .views import create_task, get_all_tasks, get_statistics
-from my_app.views import SubTaskListCreateView, SubTaskDetailUpdateDeleteView
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import TaskListGenericAPIView, get_statistics
+from my_app.views import (
+    SubtaskListGenericAPIView,
+    SubtaskRetrieveUpdateDestroyAPIView,
+    TaskCreateUpdateDeleteAPIView,
+    CategoryViewSet
+)
+
+router = DefaultRouter()
+router.register(r'category', CategoryViewSet)
 
 urlpatterns = [
-    path('create/', create_task),
-    path('get_all/', get_all_tasks),
-    path('get_statistics/', get_statistics),
-    path('subtasks/', SubTaskListCreateView.as_view()),
-    path('subtasks/<int:pk>', SubTaskDetailUpdateDeleteView.as_view())
+    path('', include(router.urls)),
+    path('task_info/', get_statistics),
+    path('tasks/', TaskListGenericAPIView.as_view()),
+    path('task/<int:pk>/', TaskCreateUpdateDeleteAPIView.as_view()),
+    path('subtasks/', SubtaskListGenericAPIView.as_view()),
+    path('subtask/<int:pk>/', SubtaskRetrieveUpdateDestroyAPIView.as_view())
 ]
