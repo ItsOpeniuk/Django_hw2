@@ -1,13 +1,26 @@
-from rest_framework.generics import get_object_or_404
+from django.contrib.auth.models import User
 from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.request import Request
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from rest_framework import status
 from django.db.models import Count
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, get_object_or_404
+from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.decorators import action
+from rest_framework.authentication import (
+    BasicAuthentication,
+    TokenAuthentication
+)
+from rest_framework.permissions import (
+    IsAuthenticated,
+    AllowAny,
+    IsAdminUser,
+    IsAuthenticatedOrReadOnly
+)
+from rest_framework_simplejwt.tokens import RefreshToken
+
+
 
 from my_app.models import Task, SubTask, Category
 from my_app.serializers.tasks import TaskSerializer, TaskCreateSerializer
@@ -15,9 +28,13 @@ from my_app.serializers.subtasks import SubTaskSerializer, SubTaskCreateSerializ
 from my_app.serializers.categories import CategorySerializer, CategoryCreateSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
+from my_app.serializers.user_serializer import UserRegistrationSerializer
 
 
-class TaskListGenericAPIView(ListCreateAPIView):
+class TaskListCreateGenericAPIView(ListCreateAPIView):
+
+
+    permission_classes = [IsAuthenticated]
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['status', 'deadline']
@@ -33,9 +50,17 @@ class TaskListGenericAPIView(ListCreateAPIView):
         return Task.objects.all()
 
 
-class TaskCreateUpdateDeleteAPIView(RetrieveUpdateDestroyAPIView):
+class TaskDetailUpdateDeleteAPIView(RetrieveUpdateDestroyAPIView):
+
 
     __model = Task
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            self.permission_classes = [IsAuthenticated]
+        else:
+            self.permission_classes = [IsAdminUser]
+        return super(TaskDetailUpdateDeleteAPIView, self).get_permissions()
 
     def get_object(self):
         return get_object_or_404(queryset=self.__model, pk=self.kwargs['pk'])
@@ -63,8 +88,9 @@ def get_statistics(request: Request) -> Response:
         return Response(data=[], status=status.HTTP_204_NO_CONTENT)
 
 
-class SubtaskListGenericAPIView(ListCreateAPIView):
+class SubtaskListCreateGenericAPIView(ListCreateAPIView):
 
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['status', 'deadline']
     search_fields = ['title', 'description']
@@ -83,6 +109,16 @@ class SubtaskRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
 
     __model = SubTask
 
+    def get_permissions(self):
+
+        if self.request.method == 'GET':
+            self.permission_classes = [IsAuthenticated]
+
+        else:
+            self.permission_classes = [IsAdminUser]
+
+        return super(SubtaskRetrieveUpdateDestroyAPIView, self).get_permissions()
+
     def get_object(self):
         return get_object_or_404(SubTask, pk=self.kwargs.get('pk'))
 
@@ -95,6 +131,7 @@ class SubtaskRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
 class CategoryViewSet(ModelViewSet):
 
     queryset = Category.objects.all()
+    permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
 
@@ -115,4 +152,3 @@ class CategoryViewSet(ModelViewSet):
         ]
 
         return Response(data)
-
